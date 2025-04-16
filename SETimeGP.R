@@ -106,9 +106,17 @@ SE_plot = ggplot() +
   geom_line(aes(x = time_pred, y = Pred_data[,1]), col = "#007d69", lwd = 0.8) + 
   geom_point(aes(x = tsteps_obs, y = Vspt_obs), col = "black") + 
   geom_line(aes(x = time_pred, y = Vspt), col = "black", alpha = 0.5) +
-  geom_ribbon(aes(x = tsteps, ymin = Pred_data[,4], ymax = Pred_data[,3]), fill = "#7f3635", alpha = 0.3) + 
-  labs(title = "Mean of posterior GP using SE kernel",
-       x = "",
+  geom_line(aes(x = time_pred, y = Pred_data[,3]), lty = 2, col = "#813534") + 
+  geom_line(aes(x = time_pred, y = Pred_data[,4]), lty = 2, col = "#813534") + 
+  labs(title = "SE kernel interpolation",
+       x = "Time",
        y = "Vspt")
 
 SE_plot
+
+mean_vector = pred_mean_QP(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs, Vspt_obs)
+cov_mat = pred_cov_QP(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs)
+
+posterior_samples = TruncatedNormal::rtmvnorm(n = 5, mu = mean_vector, sigma = Cov_matrix,
+                                              lb = rep(0, length(Mean_vector)), 
+                                              ub = rep(Inf, length(Mean_vector)))

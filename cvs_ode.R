@@ -88,7 +88,7 @@ CVS <- function(time, u, params) {
 
 
 # Define time range
-tspan <- c(0.0, 0.3)
+tspan <- c(0.0, 10)
 tsteps <- seq(tspan[1], tspan[2], length.out = 1000)
 
 # Initial conditions
@@ -107,8 +107,8 @@ p_ <- list(Elvf = 2.8798, Eao = 0.6913, Evc = 0.0059, Ervf = 0.585, Epa = 0.369,
 
 
 # Solve the system
-sol <- ode(y = u0, times = tsteps, func = CVS, parms = p_)
-original_data <- as.data.frame(output)
+sol <- ode(y = u0, times = tsteps, func = CVS, parms = p_, method = "ode45")
+original_data <- as.data.frame(sol)
 
 # Adding noise to data
 noise_magnitude <- 0.0
@@ -173,18 +173,38 @@ df_Vspt <- tibble(time = tsteps,
                   Vspt = Vspt)
 
 p1 <- ggplot(df_Vspt) +
-  geom_line(aes(x = time, y = Vspt), color = "grey") +
-  geom_point(aes(x = time, y = Vspt))
+  geom_line(aes(x = time, y = Vspt), color = "black", lwd = 0.8) + 
+  labs(title = "Temporal evolution of Vspt",
+       x = "Time (s)",
+       y = "Septum free wall volume, Vspt (ml)")
 
-p2 <- ggplot(df_Vspt) +
-  geom_point(aes(x = Vlv, y = Vspt))
+p2a <- ggplot(df_Vspt) +
+  geom_point(aes(x = Vlv, y = Vspt)) +
+  labs(title = "Vspt plotted against Vlv",
+       x = "Volume of left ventricle, Vlv (ml)",
+       y = "Septum free wall volume, Vspt (ml)")
 
-p3 <- ggplot(df_Vspt) +
-  geom_point(aes(x = Vrv, y = Vspt))
+p2b <- ggplot(df_Vspt) +
+  geom_line(aes(x = time, y = Vlv), color = "black", lwd = 0.8) +
+  labs(title = "Temporal evolution of Vlv",
+       x = "Time (s)",
+       y = "Volume of left ventricle, Vlv (ml)")
+
+p3a <- ggplot(df_Vspt) +
+  geom_point(aes(x = Vrv, y = Vspt)) + 
+  labs(title = "Vspt plotted against Vrv",
+       x = "Volume of right ventricle, Vrv (ml)",
+       y = "Septum free wall volume, Vspt (ml)")
+
+p3b <- ggplot(df_Vspt) +
+  geom_line(aes(x = time, y = Vrv), color = "black", lwd = 0.8) + 
+  labs(title = "Temporal evolution of Vrv",
+       x = "Time (s)",
+       y = "Volume of right ventricle, Vrv (ml)")
 
 p4 <- ggplot(df_Vspt) +
   geom_point(aes(x = Vao, y = Vspt))
 
 
-(p1 + p2)/(p3 + p4)
+p3a
 

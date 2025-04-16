@@ -4,7 +4,7 @@ QP_plot <- ggplot() +
   geom_point(aes(x = tsteps_obs, y = Vspt_obs, color = "Training data")) +
   geom_line(aes(x = time_pred, y = Vspt, color = "True Vspt"), alpha = 0.5) +
   geom_ribbon(aes(x = tsteps, ymin = Pred_df[,4], ymax = Pred_df[,3], fill = "3 standard deviations"), alpha = 0.3) + 
-  labs(title = "Mean of posterior GP using QP kernel",
+  labs(title = "GP predictions with QP kernel",
        x = "Time (s)",
        y = "Vspt") +
   scale_color_manual(name = NULL,  # Removes legend title for color
@@ -20,7 +20,7 @@ SE_plot <- ggplot() +
   geom_point(aes(x = tsteps_obs, y = Vspt_obs, color = "Training data")) + 
   geom_line(aes(x = time_pred, y = Vspt, color = "True Vspt"), alpha = 0.5) +
   geom_ribbon(aes(x = tsteps, ymin = Pred_data[,4], ymax = Pred_data[,3], fill = "3 standard deviations"), alpha = 0.3) + 
-  labs(title = "Mean of posterior GP using SE kernel",
+  labs(title = "GP predictions with SE kernel",
        x = "",
        y = "Vspt") +
   scale_color_manual(name = NULL,  # Removes legend title for color
