@@ -79,7 +79,7 @@ Cov_QP <- function(x1, x1p, x2, x2p, x3, x3p, sigma = sigma_MAP, length_scale1 =
       K[i, j] = ((exp(-(x1[i] - x1p[j])^2 / (2 * length_scale1^2))) *
                    (exp(-(x2[i] - x2p[j])^2 / (2 * length_scale2^2))) * 
                    (exp((-2/(length_scale3)^2) * (sin(pi * abs(x3[i]-x3p[j])/period))^2))) *
-        sigma^2
+                    sigma^2
     }
   }
   
@@ -100,11 +100,9 @@ pred_cov_QP <- function(x1_pred, x1_obs, x2_pred, x2_obs, x3_pred, x3_obs, nugge
   C_pred_obs <- Cov_QP(x1_pred, x1_obs, x2_pred, x2_obs, x3_pred, x3_obs)
   C_obs_obs <- Cov_QP(x1_obs, x1_obs, x2_obs, x2_obs, x3_obs, x3_obs)
   C_pred_pred = Cov_QP(x1_pred, x1_pred, x2_pred, x2_pred, x3_pred, x3_pred)
-  s <- C_pred_pred - (C_pred_obs %*% solve(C_obs_obs + (nugget*diag(ncol(C_obs_obs)))) %*% t(C_pred_obs))
-  print(isSymmetric(C_pred_pred))
-  print(isSymmetric((C_pred_obs %*% solve(C_obs_obs + (nugget*diag(ncol(C_obs_obs)))) %*% t(C_pred_obs))))
-  print((C_pred_obs %*% solve(C_obs_obs + (nugget*diag(ncol(C_obs_obs)))) %*% t(C_pred_obs))[1,5])
-  print((C_pred_obs %*% solve(C_obs_obs + (nugget*diag(ncol(C_obs_obs)))) %*% t(C_pred_obs))[5,1])
+  C_obs_obs_nug <- C_obs_obs + nugget * diag(nrow(C_obs_obs))
+  print(det(C_obs_obs_nug))
+  s <- C_pred_pred - (C_pred_obs %*% solve(C_obs_obs_nug) %*% t(C_pred_obs))
   return(s)
 }
 
@@ -141,7 +139,10 @@ QP_plot
 Cov_matrix = pred_cov_QP(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs)
 Mean_vector = pred_mean(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs, Vspt_obs)
 
+isSymmetric(Cov_matrix)
+
 View(Cov_matrix) #NOT SYMMETRIC
+View(Mean_vector)
 
 #sample
 posterior_samples = TruncatedNormal::rtmvnorm(n = 1, mu = Mean_vector, sigma = Cov_matrix,
@@ -167,3 +168,5 @@ p1 = ggplot() +
 p1  
 
 eigen(Cov_matrix, symmetric = TRUE)$values
+
+pred_mean(Vlv_obs, c(3,3.1), Vrv_obs, c(4.6,2.4), tsteps_obs, c(4,4.3), Vspt_obs)

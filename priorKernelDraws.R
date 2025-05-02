@@ -77,11 +77,9 @@ prior_sample_periodic = mvrnorm(n = 5, mu = rep(0,length(input1)), Sigma = prior
 #-----------------------------------------
 
 p1 = ggplot() + 
-  geom_line(aes(x = input1, y = prior_sample_periodic[1,]), col = "#022020", lwd = 0.8)+
-  geom_line(aes(x = input1, y = prior_sample_periodic[2,] + 3), col = "#003c3c", lwd = 0.8)+
-  geom_line(aes(x = input1, y = prior_sample_periodic[3,] + 6), col = "#007d69", lwd = 0.8)+
-  geom_line(aes(x = input1, y = prior_sample_periodic[4,] + 9), col = "#00a87e", lwd = 0.8)+
-  geom_line(aes(x = input1, y = prior_sample_periodic[5,] + 12), col = "#00c896", lwd = 0.8)+
+  geom_line(aes(x = input1, y = prior_sample_periodic[1,]), col = "red", lwd = 0.8)+
+  geom_line(aes(x = input1, y = prior_sample_periodic[2,]), col = "black", lwd = 0.8)+
+  geom_line(aes(x = input1, y = prior_sample_periodic[3,]), col = "blue", lwd = 0.8)+
   geom_vline(xintercept = seq(0,10,.75), alpha = .2) + 
   theme(axis.line = element_line(colour = "black"),
         panel.grid.major = element_blank(),
@@ -91,6 +89,8 @@ p1 = ggplot() +
   labs(title = "Periodic kernel",
        y = "",
        x = "")
+
+p1
 
 p2 = ggplot() + 
   geom_line(aes(x = input1, y = prior_sample_SE[1,]), col = "red", lwd = 0.8)+
@@ -103,12 +103,9 @@ p2 = ggplot() +
 p2
 
 p3 = ggplot() + 
-  geom_line(aes(x = input1, y = prior_sample_QP[1,]), col = "#022020", lwd = 0.8) +
-  geom_line(aes(x = input1, y = prior_sample_QP[2,] + 3), col = "#003c3c", lwd = 0.8) +
-  geom_line(aes(x = input1, y = prior_sample_QP[3,] + 6), col = "#007d69", lwd = 0.8) +
-  geom_line(aes(x = input1, y = prior_sample_QP[4,] + 9), col = "#00a87e", lwd = 0.8) +
-  geom_line(aes(x = input1, y = prior_sample_QP[5,] + 12), col = "#00c896", lwd = 0.8) +
-  geom_vline(xintercept = seq(0,10,.75), alpha = .2) + 
+  geom_line(aes(x = input1, y = prior_sample_QP[1,]), col = "red", lwd = 0.8) +
+  geom_line(aes(x = input1, y = prior_sample_QP[2,]), col = "black", lwd = 0.8) +
+  geom_line(aes(x = input1, y = prior_sample_QP[3,]), col = "blue", lwd = 0.8) +
   theme(axis.line = element_line(colour = "black"),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
@@ -118,9 +115,11 @@ p3 = ggplot() +
        y = "",
        x = "Input")
 
-p1/p3
+p1
 
 p2
+
+p3
 
 observed_x = c(1,7.75)
 observed_y = c(3,-1.5)
