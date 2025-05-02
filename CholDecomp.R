@@ -15,7 +15,7 @@ library(TruncatedNormal)
 #import .stan file
 playground_model = cmdstan_model(stan_file = "GP_periodic_time.stan")
 
-#run CVS model for 0.75s with 30 timesteps
+#run CVS model for 0.75s with 30 time steps
 Vspt_obs = Vspt
 Vrv_obs = Vrv
 Vlv_obs = Vlv
@@ -59,7 +59,7 @@ param_samples = playground_model$sample(data = mydata,
 mcmc_trace(param_samples$draws(),pars = c("sigma", "length_scale1", "length_scale2","length_scale3"))
 param_samples
 param_samples$draws()
-mcmc_hist(param_samples$draws())
+mcmc_hist(param_samples$draws(variables = c("sigma", "length_scale1", "length_scale2","length_scale3")))
 
 #-----------------------------------------
 #Setting up mean and covariance for prediction
@@ -109,7 +109,7 @@ pred_cov_QP <- function(x1_pred, x1_obs, x2_pred, x2_obs, x3_pred, x3_obs,
   
   # Cholesky decomposition for inversion
   L <- chol(C_obs_obs_nug)
-  tmp <- forwardsolve(t(L), t(C_pred_obs))  # Solving Lᵗ x = Kᵗ
+  tmp <- forwardsolve(t(L), t(C_pred_obs))
   s <- C_pred_pred - t(tmp) %*% tmp
   
   return(s)
@@ -144,24 +144,31 @@ QP_plot = ggplot() +
 
 QP_plot
 
+QPMeanMSE = mean((Vspt - Pred_df[,1])^2)
+
 #Compute mean vector and cov matrix for MVN
 Cov_matrix = pred_cov_QP(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs) + 1e-7 * diag(nrow(Pred_df))
 Mean_vector = pred_mean_QP(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs, Vspt_obs)
 
-View(Cov_matrix)
-
 #sample
 
-posterior_samples = list()
+Vspt_samples = list()
 for (i in 1:10){
-  posterior_samples[[i]] = rtmvnorm(n = 1, mu = Mean_vector, sigma = Cov_matrix,
-                                  lb = rep(0, nrow(Pred_df)))
+  Vspt_samples[[i]] = rtmvnorm(n = 1, mu = Mean_vector, sigma = Cov_matrix,
+                                  lb = rep(0, nrow(Mean_vector)))
 }
 
+Vspt_samples_mat = do.call(rbind, Vspt_samples)
 
-posterior_samples_new = do.call(rbind, posterior_samples)
+QPsampleMSE = numeric(10)
 
-plot(posterior_samples_new[1,], ylim = range(posterior_samples_new), type = "l")
-for(i in 2:10){
-  lines(posterior_samples_new[i,])
+for (i in 1:10){
+  
+  QPsampleMSE[i] = mean((Vspt - Vspt_samples_mat[i,])^2)
+  
 }
+
+QPsampleMSE
+
+mean(QPsampleMSE)
+

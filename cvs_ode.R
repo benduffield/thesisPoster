@@ -107,7 +107,7 @@ p_ <- list(Elvf = 2.8798, Eao = 0.6913, Evc = 0.0059, Ervf = 0.585, Epa = 0.369,
 
 
 # Solve the system
-sol <- ode(y = u0, times = tsteps, func = CVS, parms = p_, method = "ode45")
+system.time(sol <- ode(y = u0, times = tsteps, func = CVS, parms = p_, method = "ode45"))
 original_data <- as.data.frame(sol)
 
 # Adding noise to data
@@ -124,9 +124,9 @@ noisy_data_tb <- as_tibble(noisy_data) %>%
                values_to = "vals")
 
 p_noisy_data_tb <- ggplot(noisy_data_tb) +
-  geom_line(aes(x = time, y = vals), color = "grey") +
-  geom_point(aes(x = time, y = vals)) +
-  facet_grid(vars(variable), scales = "free")
+  geom_line(aes(x = time, y = vals), color = "black", lwd = 1) +
+  facet_grid(vars(variable), scales = "free") + 
+  labs(y = "")
 
 p_noisy_data_tb
 
@@ -206,5 +206,11 @@ p4 <- ggplot(df_Vspt) +
   geom_point(aes(x = Vao, y = Vspt))
 
 
-p3a
+p5 = ggplot(df_Vspt) + 
+  geom_point(aes(x = Vlv, y = Vrv, col = Vspt)) + 
+  labs(title = "Vspt at co-ordinates (Vlv,Vrv)",
+       x = "Volume of left ventricle, Vlv (ml)",
+       y = "Volume of right ventricle, Vrv (ml)",
+       col = "Vspt (ml)")
 
+p5

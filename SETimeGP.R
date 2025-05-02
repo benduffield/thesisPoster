@@ -51,7 +51,7 @@ param_samples = playground_model$sample(data = mydata,
 mcmc_trace(param_samples$draws(),pars = c("sigma", "length_scale1", "length_scale2","length_scale3"))
 param_samples
 param_samples$draws()
-mcmc_hist(param_samples$draws())
+mcmc_hist(param_samples$draws(variables = c("sigma", "length_scale1", "length_scale2","length_scale3")))
 
 #-----------------------------------------
 #Setting up mean and covariance for prediction
@@ -75,9 +75,19 @@ pred_mean_SE <- function(x1_pred, x1_obs, x2_pred, x2_obs, x3_pred, x3_obs, y, n
 }
 
 pred_cov_SE <- function(x1_pred, x1_obs, x2_pred, x2_obs, x3_pred, x3_obs, nugget = tau_sq_MAP){
-  C_xX <- Cov_Exp_sq(x1_pred, x1_obs, x2_pred, x2_obs, x3_pred, x3_obs)
-  C_XX <- Cov_Exp_sq(x1_obs, x1_obs, x2_obs, x2_obs, x3_obs, x3_obs)
-  s <- Cov_Exp_sq(x1_pred, x1_pred, x2_pred, x2_pred, x3_pred, x3_pred) - C_xX %*% solve(C_XX + (nugget*diag(ncol(C_XX)))) %*% t(C_xX)
+  
+  C_pred_obs <- Cov_Exp_sq(x1_pred, x1_obs, x2_pred, x2_obs, x3_pred, x3_obs)
+  C_obs_obs  <- Cov_Exp_sq(x1_obs, x1_obs, x2_obs, x2_obs, x3_obs, x3_obs)
+  C_pred_pred <- Cov_Exp_sq(x1_pred, x1_pred, x2_pred, x2_pred, x3_pred, x3_pred)
+  
+  # Add nugget for numerical stability
+  C_obs_obs_nug <- C_obs_obs + nugget * diag(nrow(C_obs_obs))
+  
+  # Cholesky decomposition for inversion
+  L <- chol(C_obs_obs_nug)
+  tmp <- forwardsolve(t(L), t(C_pred_obs))
+  s <- C_pred_pred - t(tmp) %*% tmp
+  
   return(s)
 }
 
@@ -91,16 +101,13 @@ time_pred = tsteps
 
 Pred_data = matrix(nrow = length(Vrv_pred), ncol = 4)
 
-for (i in 1:length(Vrv_pred)){
-  
-  Pred_data[i,1] = pred_mean_SE(Vrv_pred[i], Vrv_obs, Vlv_pred[i], Vlv_obs, time_pred[i], tsteps_obs, Vspt_obs)
-  
-  Pred_data[i,2] = pred_cov_SE(Vrv_pred[i], Vrv_obs, Vlv_pred[i], Vlv_obs, time_pred[i], tsteps_obs)
-  
-  Pred_data[i,3] = Pred_data[i,1] + (1.997 * sqrt(Pred_data[i,2]))
-  
-  Pred_data[i,4] = Pred_data[i,1] - (1.997 * sqrt(Pred_data[i,2]))
-}
+Pred_data[,1] = pred_mean_SE(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs, Vspt_obs)
+
+Pred_data[,2] = diag(pred_cov_SE(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs))
+
+Pred_data[,3] = Pred_data[,1] + (3 * sqrt(Pred_data[,2]))
+
+Pred_data[,4] = Pred_data[,1] - (3 * sqrt(Pred_data[,2]))
 
 SE_plot = ggplot() + 
   geom_line(aes(x = time_pred, y = Pred_data[,1]), col = "#007d69", lwd = 0.8) + 
@@ -114,9 +121,35 @@ SE_plot = ggplot() +
 
 SE_plot
 
-mean_vector = pred_mean_QP(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs, Vspt_obs)
-cov_mat = pred_cov_QP(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs)
+SEMeanMSE = mean((Pred_data[,1] - Vspt)^2)
 
-posterior_samples = TruncatedNormal::rtmvnorm(n = 5, mu = mean_vector, sigma = Cov_matrix,
-                                              lb = rep(0, length(Mean_vector)), 
-                                              ub = rep(Inf, length(Mean_vector)))
+#Compute mean vector and cov matrix for MVN
+Cov_matrix = pred_cov_SE(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs) + 1e-7 * diag(nrow(Pred_df))
+Mean_vector = pred_mean_SE(Vrv_pred, Vrv_obs, Vlv_pred, Vlv_obs, time_pred, tsteps_obs, Vspt_obs)
+
+#sample
+
+Vspt_samplesSE = list()
+for (i in 1:10){
+  Vspt_samplesSE[[i]] = rmvnorm(n = 1, mu = Mean_vector, Sigma = Cov_matrix)
+}
+
+Vspt_samples_mat = do.call(rbind, Vspt_samplesSE)
+
+SEsampleMSE = numeric(10)
+
+for (i in 1:10){
+  
+  SEsampleMSE[i] = mean((Vspt - Vspt_samples_mat[i,])^2)
+  
+}
+
+SEsampleMSE
+
+mean(SEsampleMSE)
+
+plot(tsteps, Vspt_samples_mat[1,], type = "l")
+for (i in 2:10){
+  lines(tsteps, Vspt_samples_mat[i,], type = "l")
+}
+

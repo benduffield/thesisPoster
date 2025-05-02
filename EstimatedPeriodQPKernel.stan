@@ -36,7 +36,6 @@ model {
   length_scale1 ~ gamma(2,1);
   length_scale2 ~ gamma(2,1);
   length_scale3 ~ gamma(2,1);
-  p ~ normal(0.75,0.1) T[0,];
 
   // Likelihood
   y ~ multi_normal(mu, K);
